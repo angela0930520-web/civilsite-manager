@@ -1,48 +1,26 @@
 <!doctype html>
 <html lang="zh-Hant-TW">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="CivilSiteManager 土木工地管理系統展示，包含操作畫面與 SQLite 驗收結果。">
-  <title>CivilSiteManager｜土木工地管理系統</title>
-  <link rel="stylesheet" href="site.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CivilSiteManager｜工地管理系統</title>
+<link rel="stylesheet" href="site.css">
+<script type="module" src="manager.js"></script>
 </head>
 <body>
-  <header><div class="frame nav"><a class="brand" href="./"><span aria-hidden="true">工</span> CivilSiteManager</a><nav aria-label="主要導覽"><a href="#modules">系統功能</a><a href="#verification">驗收結果</a></nav></div></header>
-  <main>
-    <section class="hero"><div class="frame">
-      <h1>土木工地日常行政與<br>材料進出貨管理系統</h1>
-      <p>透過同一個儀表板掌握工地庫存、進貨單據、零用金與機具借還。</p>
-      <a class="button" href="https://angela33.pythonanywhere.com/">開啟免登入操作示範</a>
-      <a class="secondary" href="#preview">查看系統畫面</a>
-    </div></section>
-    <div class="frame content">
-      <section id="preview">
-        <h2>系統儀表板</h2>
-        <figure><a href="dashboard.png"><img src="dashboard.png" alt="CivilSiteManager 實際儀表板，左側是功能選單，主區顯示統計與紅色低庫存警示。" width="2560" height="1654"></a>
-          <figcaption>圖 1　驗收時擷取的系統畫面。點擊圖片可放大。</figcaption>
-        </figure>
-      </section>
-      <section id="modules">
-        <h2>系統功能</h2>
-        <div class="cards">
-          <article><h3>材料進出貨</h3><p>登錄進貨與領料，即時計算庫存。低於安全庫存時顯示紅色警示。</p></article>
-          <article><h3>協力廠商</h3><p>新增、搜尋及修改廠商資料，查看關聯的進貨單據。</p></article>
-          <article><h3>進貨單據</h3><p>依材料、廠商或請款狀態篩選，查閱數量、單價與總金額。</p></article>
-          <article><h3>零用金與機具</h3><p>查詢零用金支出及月統計，管理機具借出、歸還與逾期紀錄。</p></article>
-        </div>
-      </section>
-      <section id="verification">
-        <h2>SQLite 驗收結果</h2>
-        <dl class="metrics">
-          <div><dt>資料表</dt><dd>7 張</dd></div><div><dt>外鍵關聯</dt><dd>3 項</dd></div>
-          <div><dt>CRUD 測試</dt><dd>28／28</dd></div><div><dt>既有自動測試</dt><dd>6／6</dd></div>
-        </dl>
-        <p>驗收使用獨立資料庫執行新增、查詢、修改及刪除。SQLite 完整性檢查回傳 <code>ok</code>，外鍵檢查為 0 筆違規。</p>
-        <p>本頁提供系統介紹與驗收摘要。可在免登入網站操作資料，該網站使用獨立的公開示範資料庫。</p>
-      </section>
-    </div>
-  </main>
-  <footer><div class="frame">CivilSiteManager · Python Flask、SQLite 與 Bootstrap</div></footer>
+<a class="skip" href="#main">跳至主要內容</a>
+<aside class="sidebar">
+<a class="brand" href="#/"><span class="brand-icon" aria-hidden="true">工</span><span>工地管理系統<small>CivilSiteManager</small></span></a>
+<button id="nav-toggle" class="nav-toggle" type="button" aria-controls="navigation" aria-expanded="false">功能選單</button>
+<nav id="navigation" aria-label="主要導覽"></nav>
+</aside>
+<div class="workspace">
+<header class="topline">土木工程／工地行政</header>
+<main id="main" tabindex="-1">
+<div class="page-head"><p>公開示範。請僅輸入示範資料。</p><div id="editor"></div></div>
+<div id="feedback" role="status"></div>
+<div id="view" aria-live="polite">載入中…</div>
+</main>
+</div>
 </body>
 </html>
