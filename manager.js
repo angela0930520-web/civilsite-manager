@@ -4,13 +4,11 @@ import { apiBase } from "./config.js";
 const view = document.querySelector("#view");
 const feedback = document.querySelector("#feedback");
 const navigation = document.querySelector("#navigation");
-const editor = document.querySelector("#editor");
 const groups = [["材料與廠商",["materials","in","out","vendors"]],["工地行政",["petty_cash","equipment","equipment_loans"]]];
 const kinds = { material_id:"material", vendor_id:"vendor", equipment_id:"tool" };
 const reference = { material:"materials", vendor:"vendors", tool:"equipment" };
 const payments = ["未請款","對帳中","已結清"];
 const day = () => new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Taipei"}).format(new Date());
-let key = sessionStorage.getItem("civilsite-editor") || "";
 let serial = 0;
 let state = {};
 const escape = value => String(value ?? "").replace(/[&<>"']/g, char =>
@@ -23,7 +21,6 @@ const alert = (message, error=false) => {
 };
 async function api(endpoint, method="GET", data) {
   const headers = {};
-  if (method !== "GET" && key) headers.Authorization = "Bearer " + key;
   if (data) headers["Content-Type"] = "application/json";
   const response = await fetch(apiBase + "/api/" + endpoint,{method,headers,body:data ? JSON.stringify(data) : undefined});
   const value = await response.json();
@@ -67,9 +64,9 @@ function stockIndicator(row) {
 function rowActions(section,row) {
   const actions = [
     link("查看",pathFor(section,row.id)),
-    key ? link("修改",pathFor(section,row.id,"edit")) : "",
-    key && section==="equipment_loans" && !row.returned ? '<button class="text-button" data-action="return" data-id="'+row.id+'">歸還</button>' : "",
-    key ? '<button class="text-button danger-text" data-action="delete" data-id="'+row.id+'">刪除</button>' : "",
+    link("修改",pathFor(section,row.id,"edit")),
+    section==="equipment_loans" && !row.returned ? '<button class="text-button" data-action="return" data-id="'+row.id+'">歸還</button>' : "",
+    '<button class="text-button danger-text" data-action="delete" data-id="'+row.id+'">刪除</button>',
   ];
   return actions.filter(Boolean).join(" ");
 }
@@ -93,18 +90,6 @@ function nav(section) {
 document.querySelector("#nav-toggle").onclick = event => {
   event.currentTarget.setAttribute("aria-expanded",String(navigation.classList.toggle("is-open")));
 };
-function editorControl() {
-  editor.innerHTML = key
-    ? '<button type="button" class="btn btn-outline-secondary" id="leave">結束編輯</button>'
-    : '<form id="unlock" class="filter-actions"><input type="password" name="key" aria-label="編輯金鑰" autocomplete="off" placeholder="編輯金鑰" required><button class="btn btn-outline-secondary">啟用編輯</button></form>';
-  editor.querySelector("#leave")?.addEventListener("click",()=>{key="";sessionStorage.removeItem("civilsite-editor");render();});
-  editor.querySelector("#unlock")?.addEventListener("submit",async event=>{
-    event.preventDefault();
-    key = new FormData(event.currentTarget).get("key").trim();
-    try { await api("editor","POST"); sessionStorage.setItem("civilsite-editor",key); alert("已啟用編輯。"); render(); }
-    catch(error) {key="";alert(error.message,true);}
-  });
-}
 async function dashboard() {
   const [stock,vendors,cash,loans,recent] = await Promise.all(["materials","vendors","petty_cash","equipment_loans","in"].map(section=>api(section)));
   const cards = [
@@ -115,7 +100,7 @@ async function dashboard() {
     ["逾期未歸還",loans.filter(row=>loanState(row)==="已逾期").length+" 筆","equipment_loans","overdue-metric"],
   ];
   const stats = cards.map(([label,value,section,css])=>'<a class="'+css+'" href="'+pathFor(section)+'"><span>'+label+'</span><strong class="amount">'+escape(value)+"</strong></a>").join("");
-  return title("工地總覽",key?link("登錄進貨",pathFor("in","new"),"btn btn-primary"):"") + '<div class="metrics">'+stats+"</div>"+
+  return title("工地總覽",link("登錄進貨",pathFor("in","new"),"btn btn-primary")) + '<div class="metrics">'+stats+"</div>"+
     panel("材料庫存",table("materials",stock.slice(0,8),["name","spec","balance","safety","unit"],false))+
     panel("近期進貨",table("in",recent.slice(0,5),["day","document","material","vendor","total","payment"],false));
 }
@@ -164,7 +149,7 @@ async function listing(section) {
     return "<label>"+escape(labels[k])+(type?'<input class="form-control" type="'+type+'" name="'+k+'">':
       '<select class="form-select" name="'+k+'">'+selectOptions(options[k],"","全部")+"</select>")+"</label>";
   }).join("");
-  const action = key ? link(section==="equipment_loans"?"登錄借出":"新增"+module.singular,pathFor(section,"new"),"btn btn-primary") : "";
+  const action = link(section==="equipment_loans"?"登錄借出":"新增"+module.singular,pathFor(section,"new"),"btn btn-primary");
   return { rows, html:title(module.title,action)+'<form id="query" class="panel filters"><label>關鍵字<input class="form-control" type="search" name="q"></label>'+
     controls+'<div class="filter-actions"><button class="btn btn-primary">查詢</button><button class="btn btn-outline-secondary" type="reset">清除</button></div></form><div id="results">'+results(section,rows)+"</div>" };
 }
@@ -219,14 +204,12 @@ async function render() {
   const [section="",id,action]=(location.hash||"#/").slice(2).split("/");
   state={section,id};
   nav(section);
-  editorControl();
   view.textContent="載入中…";
   try {
     let html, rows;
     if(!section) html=await dashboard();
     else if(!catalog[section]) throw new Error("找不到此功能。");
     else if(id==="new"||action==="edit") {
-      if(!key) throw new Error("請先輸入編輯金鑰。");
       html=await recordForm(section,id);
     } else if(id) html=await detail(section,id);
     else ({html,rows}=await listing(section));
